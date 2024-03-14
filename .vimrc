@@ -1,3 +1,4 @@
+set secure
 set nocompatible              " be iMproved, required
 filetype off                  " required
 
@@ -66,6 +67,8 @@ nnoremap <leader>w :w<cr>
 set number
 "highlight searched word
 set hlsearch
+"highlight patterns while typing
+set incsearch
 
 " FILE BROWSING:
 let g:netrw_banner=0        " disable annoying banner
@@ -79,3 +82,13 @@ let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
 " NOTE: use * for fuzzy search
 set path+=.,**
 set wildmenu
+
+" show existing tab with 4 spaces width
+set tabstop=4
+" when indenting with '>', use 4 spaces width
+set shiftwidth=4
+" On pressing tab, insert 4 spaces
+set expandtab
+
+set autoindent
+set smartindent
