@@ -1,0 +1,6 @@
+# better 'history" output
+HISTTIMEFORMAT="%d/%m%y %T "
+# disable terminal freezes (e.g. Ctrl + s/q - freeze/unfreeze)
+stty -ixon
+# directory with necessary executables for tmux and vim
+export PATH=$PATH:~/bin
