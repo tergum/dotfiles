@@ -1,6 +1,8 @@
 set secure
 set nocompatible              " be iMproved, required
 filetype off                  " required
+set exrc                      " read also .vimrc in the current working dorectory
+                              " to add some project specific settings
 
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
@@ -16,6 +18,14 @@ Plugin 'VundleVim/Vundle.vim'
 " e.g. C-h = Left
 " https://github.com/christoomey/vim-tmux-navigator
 Plugin 'christoomey/vim-tmux-navigator'
+
+" Enhanced C++ syntax highlighting
+" https://github.com/octol/vim-cpp-enhanced-highlight
+Plugin 'octol/vim-cpp-enhanced-highlight'
+
+" Vim One colorscheme (light and dark)
+" https://github.com/rakr/vim-one
+Plugin 'rakr/vim-one'
 
 " The following are examples of different formats supported.
 " Keep Plugin commands between vundle#begin/end.
@@ -70,7 +80,9 @@ set hlsearch
 "highlight patterns while typing
 set incsearch
 
+" .............................................................................
 " FILE BROWSING:
+" .............................................................................
 let g:netrw_banner=0        " disable annoying banner
 let g:netrw_browse_split=4  " open in prior window
 let g:netrw_altv=1          " open splits to the right
@@ -92,3 +104,19 @@ set expandtab
 
 set autoindent
 set smartindent
+
+" .............................................................................
+" vim-cpp-enahanced-highlight
+" .............................................................................
+let g:cpp_class_scope_highlight = 1
+let g:cpp_member_variable_highlight = 0
+let g:cpp_class_decl_highlight = 1
+let g:cpp_experimental_template_highlight = 1
+
+" .............................................................................
+" One color scheme
+" .............................................................................
+let g:airline_theme='one'
+colorscheme one 
+set background=dark
+
