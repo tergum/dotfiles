@@ -116,6 +116,8 @@ let g:cpp_experimental_template_highlight = 1
 " .............................................................................
 " One color scheme
 " .............................................................................
+set termguicolors
+
 let g:airline_theme='one'
 colorscheme one 
 set background=dark
