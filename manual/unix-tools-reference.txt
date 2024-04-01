@@ -1,0 +1,1397 @@
+========================================================
+Archives
+========================================================
+Create an archive:
+tar -czvf <file>
+tar -cjvf <file>
+-z/j gzip/bzip2 compressing
+-f file name
+
+Extract an archive:
+tar -xvf <file> -C <output dir>
+
+========================================================
+find
+========================================================
+Find files with permissions with SUID at least
+find /usr/bin -perm -4000
+
+Execute a command on every found item:
+find . -type f -exec chmod 640 {} \;
+
+Find and delete all files changed during the last 5 min:
+find . -type f -cmin -5 -delete
+
+Find files whose sizr if smaller than 2MB:
+find /var -type f -size -2M 
+
+Find and list all files whose user is not root:
+find /var -type f -not -user root -ls
+
+========================================================
+Linux file permission
+========================================================
+chmod u+r filename
+chmod u+r,g-wx,o-rwx filename
+chmod ug+rwx,o-wx filename
+chmod ugo+x filename
+chmod a+r,a-wx filename
+
+Recursively:
+chmod -R a+r,a-wx filename
+
+Look for users IDs (the 3rd field):
+tail /etc/passwd
+Use "+999" to emphasize it is User ID not its name:
+sudo chown +999 file.txt
+
+Set both user and group at once:
+sudo chown pulse:audio file.txt
+
+SUID (Set User ID):
+Show SUID as the 1st numeric value in Access (4755)
+stat <filename>
+Access: (4755/-rwsr-xr-x)
+NOTE: lowercase 's' means 'x' is also set,
+      uppercase 'S' - 'x' not set
+chmod 4XXX
+chmod u+s <file>
+
+SGID (Set Group ID):
+All files and dirs create in such directory will have its group owner
+Show SUID as the 1st numeric value in Access (2755)
+Access: (2755/-rwxr-sr-x)
+chmod 2XXX
+chmod g+s <directory>
+
+Stricky bit (mainly with dirs):
+"Restricted deletion bit" - users can delete files and dirs that only they are owners of
+Access: (1755/-rwsr-xr-t)
+NOTE: lowercase 't' means 'x' is also set,
+      uppercase 'T' - 'x' not set
+chmod 1XXX
+chmod o+t <file>
+
+Umask:
+default permissions are
+0666 - files
+0777 - dirs
+
+Each time umask is substracted from the default permissions
+To set umask:
+umaks 0022
+NOTE: add this command to each user's .bashrc
+
+Files Attributes:
+lsattr filename
+chattr +i filename
+NOTE: Once attribute changed, even super user can't change file properties (e.g. content, permission).
+But super user can change attribute back.
+
+========================================================
+Process management
+========================================================
+ps -ef - all processes with detailed info 
+ps aux/ps -aux
+ps aux --sort=%mem - sort in ascending order of memory usage
+ps aux --sort=-%mem - sort in descending order 
+ps -f -u serhii - process of a particular user
+
+pgrep (may be used instead of "ps -el | grep <process_name>)
+pgrep -l <name> - show process name along with PID
+pgrep -u root sshd - for a particular user
+
+pstree - tree structure of running processes
+pstree -c - not merge identical branches
+NOTE: Threads are shown within {} brackets.
+
+top
+1 - show stat for each CPU
+t - change CPU display
+m - change memory and swap display
+d - to enter a new delay (3 sec is default)
+y - highlight the running processes
+x - highlight the column used to sort the process list
+b - toggle bold and text highlighting
+< or > - to change sorting column
+R - reverse sorting order
+e - change size (MB, GB)
+P - sort by processor (CPU)
+M - sort by memory
+u - show processes of a user
+
+F - select column to display
+    Up and Down arrow to navigate and Space to select
+    Right Arrow and then Up or Down arrows to change column position
+    Esc to exit
+    W to save the configuration for the next start
+
+Run top 3 times with 1 sec delay and redirect to a file (Batch mode):
+top -b -n 3 -d 1 > top.txt
+To see difference b/w process state:
+grep <process_name> top.txt
+
+htop - a colorful version of top
+
+kill 
+SIGTERM (15) - to stop the process (soft kill) (default)
+SIGHUP (1) - to reload the process
+SIGKILL (9) - hard kill
+kill -l - to list signals
+C-c - sends SIGINT (2)
+
+To get PIDs:
+pgrep -l <process_name>
+pidof firefox
+
+To stop the process:
+kill -INT <PIDs list>
+kill -2 <PIDs list>
+kill -SIGINT $(pidof <process_name>)
+
+sudo systemctl status ssh
+sudo systemctl start ssh
+SSH daemon PID is stored:
+cat /var/run/sshd.pid
+
+killall - kill all instances with the same name, requires full names
+killall -15 sleep
+
+pkill - kill all instances with the same name, requires nfull partial names
+
+sleep 50 & - start background process,
+detached from the terminal's input
+but its output is still printed to the terminal's output
+To suppress the output and errors:
+ping 8.8.8.8 > /dev/null 2>&1 &
+/dev/null - null device or blackhole
+
+sleep 20 &
+[1] 1567 - job ID and PID
+Job IDs are local to the current shell
+PIDs are global to the system
+
+jobs -l - list PIDs
+
+fg %1 - move background process to the foreground
+
+C-z - suspend a process
+
+Every time when the parent process exits, it sends SIGHUP to its background (suspended) processes.
+So the children should grecefully exit too.
+
+To make children background processes immune to SIGHUP:
+nohyp sleep 123 &
+Useful when we are running long jobs on the remote via SSH
+It is a kind of alternative to tmux or screen
+
+========================================================
+Networking
+========================================================
+ifconfig - show only enabled i/f
+ifconfig -a - show all i/f
+    enp0s3 - Ethernet port 0 slot 3
+
+
+ip address show
+ip a
+ip addres show enp0s3
+
+ip -4 address
+ip -6 address
+
+route -n - show default gateway and network mask
+Flags G means the default gateway
+ip route show
+
+resolvectl status - show DNS info
+
+Activate/deactivate i/f:
+ifconfig enp0s3 down/up
+ifconfig
+
+ip link set enp0s3 down/up
+ip link show dev enp0s3
+
+Configure local IP:
+ifconfig enp0s3 192.168.0.111/24 up
+route -n
+
+ip address del 192.168.0.111/24 dev enp0s3
+ip address add 192.168.0.222/24 dev enp0s3
+ip route show
+
+Change default gateway:
+route del default gw 192.168.0.1
+route add default gw 192.168.0.2
+
+ip route del default
+ip route add default via 192.168.0.1
+
+Change i/f MAC address:
+ifconfig enp0s3 down
+ifconfig enp0s3 hw ether 08:00:27:51:05:09
+ifconfig enp0s3 up
+
+ip link show dev enp0s3
+ip link set dev enp0s3 address 08:00:27:51:05:08
+ip link show dev enp0s3
+
+netplan - network configuration tool
+/etc/netplan - config files
+netplan supports two renderers:
+1. Network Manager (desktop)
+2. systemd networkd (server)
+NOTE: you might need reconfigure your Virtual Box network settings as Bridge
+(instead of NAT) to be in the same network as host OS.
+
+On server remotely:
+1. disable Network Manager:
+systemctl stop NetworkManager
+systemctl disable NetworkManager //it won't start after the reboot
+systemctl is-enabled NetworkManager //check the status
+2. remove /etc/netplan/<NetworkManager.yaml> as no to interfere config
+3. create a new config yaml file: /etc/netplan/01-netconfig.yaml:
+Ref: more examples https://github.com/canonical/netplan/tree/main/examples
+YAML validator: https://codebeautify.org/yaml-validator
+Manual config:
+---
+network:
+    version: 2
+    renderer: networkd
+    ethernets:
+        enp0s3:
+            dhcp4: false
+            addresses:
+                - 192.168.0.20/24
+            gateway4: "192.168.0.1"
+            nameservers:
+                addresses:
+                    - "8.8.8.8"
+                    - "8.8.4.4"
+
+DHCP config:
+---
+network:
+    version: 2
+    renderer: networkd
+    ethernets:
+        enp0s3:
+            dhcp4: true
+
+4. apply and check:
+netplan apply
+ifconfig
+route -n
+
+Troubleshooting network connectivity:
+ping
+-q - show only summary
+-i - set up an interval (only root can set up less than 2 ms)
+-c - a number of tries
+TTL<30ms - excellent
+30ms<TTL<50ms - average
+50ms<TTL<100ms - somehow slow (not for RT apps)
+-t - set up TTL (useful for network topology research)
+ping -t 1/2/3/4/... -c 3 -n ubuntu.com 
+You will see routers' IPs.
+
+
+---
+SSH - Secure Shell
+---
+sudo apt update && sudo apt install openssh-server openssh-client
+
+sudo systemctl status ssh
+Service Stop, Restart, Start:
+sudo systemctl [start|restart|stop] ssh
+Enable, Disable auto booting:
+sudo systemctl [enable|disable] ssh
+Server config file: /etc/ssh/sshd_config
+Client Config file: /etc/ssh/ssh_config
+
+ssh -l user 192.168.1.5
+ssh user@192.168.1.5 -p <port number>
+
+PuTTY for Windows.
+
+Troubleshoot SSH:
+telnet 192.168.1.105 22 - to check the port is open
+OR
+nmap -p 22 192.168.1.105 (-pN)
+
+If the port is not open, on the server:
+iptables -vnL - if any firewall rule is set
+
+ufw - Uncomplicated FireWall - front end tool (user-friendly)
+sudo ufw status verbose
+sudo ufw enable/disable
+sudo ufw app list
+sudo ufw allow ssh
+
+If firewall rules are fine, then try to run ssh client in verbose mode:
+ssh -v serhii@<ip>
+
+Securing OpenSSH Server:
+/etc/ssh/sshd_config
+man sshd_config - for options reference
+1. change the default port
+Port 2278
+2. disable direct root login:
+PermitRootLogin no
+3. disable password authentication in favor of public key
+4.limit user access
+AllowUsers user1 user2
+5. filter ssh acces only to a number of IP addresses
+sudo iptables -A INPUT -p tcp --dport 2278 -s <permitted_IP> -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 2278 -j DROP
+6. use SSHv2
+7. set up timeout interval and user count:
+#ClientAliveInterval 0
+#ClientAliveCountMax 3
+8. Authentication improvements:
+MaxAuthTries 2
+MaxStartups 3
+LoginGraceTime 20
+
+
+---
+scp - secure copy via SSH (part of OpenSSH package)
+---
+Local -> Remote
+scp -p 22 file.txt serhii@192.168.1.105:~/log.txt
+scp -r -P 22 dir serhii@192.168.1.105:~/dir_output
+-p - preserves modification and access time
+
+Remote -> Local
+scp serhii@192.168.1.105:/etc/passwd ~/Desktop
+
+Remote -> Remote
+scp user1@IP1:/path user2@IP2:/path
+
+SFTP - SSH File Transport Protocol (slower but more reliable)
+Clients: WinSCP, FileZilla
+
+---
+rsync - sync files and dirs between to locations
+---
+rsync -av /etc/ ~/etc-backup
+/etc/ - copy files from src dir into sdt
+/etc - copy source dir itself inside dst
+-a - archive mode, preserve symlinks, permissions etc
+-q - quite mode
+-v - verbose
+--delete - delete files in dest, if they were removed in srs (mirroring)
+
+To exclude files and dirs while syncing:
+vim exclude_files.txt:
+movie1.mkv
+dir/
+*.png
+
+rsync -av --exclude-from='./exclude_files.txt' ~/dst/ ~/src
+rsync -av --exclude='*.png'-exclude='dir' ~/dst/ ~/src
+
+Local -> Remote
+rsync -av -e ssh /etc/ serhii@<IP>:~/etc-centos
+rsync -av -e 'ssh -p 22' /etc/ serhii@<IP>:~/etc-centos
+Remote -> Local
+rsync -av -e 'ssh -p 24' serhii@<IP>:~/etc-centos /etc/
+
+---
+wget - donwload from HTTP(s), FTP servers
+---
+wget -P /dest --limit-rate=100k <URL>
+
+To continue the interrupted download:
+wget -c -P /dest --limit-rate=100k <URL>
+
+To download all URL in file in background:
+wget -b -i ./images.txt
+To check the progress:
+tail -f wget-log
+
+To download the site for offline reading:
+wget --mirror --convert-links --adjust-extension --page-requisites --no-parent http://example.org
+or
+wget -mkEpnp http://example.org
+
+
+---
+Checking for Listening Ports:
+---
+netstat -tupan
+-t - tcp ports
+-u - udp ports
+-p - PID and app name that listening
+-a - all ports both listening and non-listening
+-n - numeric addresses instead of trying to determine sumbolic host and port names
+
+0.0.0.0:22 or :::22- means the process is listening on all IPv4 and IPv6 addresses
+
+ss -tupan - utility to investigate sockets (faster)
+
+lsof - list opened files
+lsof -u <user> - files opened by <user>
+lsof -u ^<user> - all files opened by user except <user>
+lsof -c <process_name> - files opened by a process
+lsof -iTCP -sTCP:LISTEN - files that open TCP ports in LISTEN state
+lsof -iTCP -sTCP:LISTEN -nP - in numeric format
+lsof -iTCP:22 -sTCP:LISTEN -nP - for port 22
+
+Check if remote port is opened:
+telnet <IP> <port>
+
+nmap - professional port scanner
+nmap <ip>
+nmap <ip> -p <port> -sV - check port and  service version 
+
+
+========================================================
+Manage packages
+========================================================
+sudo apt install packet.deb
+sudo apt list --upgradable
+sudo apt full-upgrade
+/var/cache/apt/archive stores all installed deb packages
+sudo apt clean - clean deb packages
+sudo apt list - available packages in repos
+apt search "transparent proxy" - find packages with such description
+apt list --installed
+apt show <package name> - show information
+
+sudo dpkg --get-selections - list all installed packages
+
+========================================================
+Check archive MD5 hash
+========================================================
+md5sum file.tar.gz - and then compare with MD4 checksum from an official site
+
+
+========================================================
+System Administration
+========================================================
+cron - deamon to execute scheduled commands (from Chronos) on servers which are running all the time
+---
+pgrep -l cron
+
+/var/spool/cron/crontabs - cron table file
+Instead of editing files, you are supposed to use the following commands:
+
+crontab -l - list jobs
+crontab -e - edit
+crontab -e -u user - edit for user
+crontab -r [-u user] - remove  the current jobs
+NOTE: the commands should be non-interactive (e.g. "apt full-upgrade -y")
+
+* - any
+*/2 - every two (e.g. minutes)
+1-4 - on 1, 2, 3, 4 minute
+Shortcuts:
+@yearly
+@monthly
+@weekly
+@hourly
+@reboot
+
+To see that CRON executes the job:
+tail -f /var/log/syslog
+
+cron -r - to remove jobs
+NOTE: cron uses its own env, so make sure you have used absolute path for commands
+Web-based generator: crontab.guru
+
+System wide cron-job are located here:
+/etc/cron.hourly
+/etc/cron.daily
+/etc/cron.weekly
+/etc/cron.monthly
+You can put your scripts there and specify in /etc/crontab when to run the scripts
+
+---
+anacron - deamon to execute scheduled commands on desktops and laptops which are NOT running all the time
+---
+/etc/anacrontab - jobs specification
+The job added in the file above will store its executaion date in the dir below:
+/var/spool/anacron/- anacron table files
+
+anacron - T - validate file syntax
+sudo anacron -d - run jobs in foreground (by default background) to see the output
+
+---
+mount
+---
+mount -l -t ext4
+
+To check USB flash drive:
+fdisk -l
+dmesg
+lsblk
+
+mount -l -t vfat
+sudo mount /dev/sdb /home/serhii/Desktop/usb
+NOTE: can be mounted on different places
+
+If filesystem is not recognize, specify -t <FS type>
+sudo mount -t vfat /dev/sdb /home/serhii/Desktop/usb
+umount /home/serhii/Desktop/usb
+
+Lazy unmount unused filesystems:
+umount -l
+
+Mount read-only:
+sudo mount -o ro /dev/sdb /home/serhii/Desktop/usb
+Remount as read-write:
+sudo mount -o rw,remount /dev/sdb /home/serhii/Desktop/usb
+
+To mount ISO:
+mkdir ~/iso
+sudo mount /path_to_ISO /home/sergii/iso -o loop
+
+fdisk, GParted - manage partitions
+
+---
+dd - work with device file
+---
+umount <path to USB mount>
+lsblk -l
+mkfs.vfat /dev/<USB drive>
+dd if=/home/serhii/linux.iso of=/dev/<USB drive> bs=4M status=progress
+
+---
+System hardware info
+---
+lshw
+-html
+-json
+-short - only summary
+lshw -C disk 
+lshw -C disk  -short
+
+inxi -Fx
+
+lscpu
+lswh -C cpu
+lscpu -J - JSON format
+
+dmidecode -t memory //about RAM memory
+DMI - Desktop Management Interface
+
+free -m - memory statistics
+
+lspci
+lsusb
+
+hdparm - get SATA drive parameters
+hdparm -i /dev/sda
+hdparm -t --direct /dev/sda
+-t - perform timing for benchmarking and comparision
+--direct - avoid using page cache
+
+iw - wireless devices output
+
+/proc - virtual filesystem
+cat /proc/cpuinfo
+cat /proc/meminfo
+cat /proc/partitions
+cat /proc/version - kernel version
+
+acpi -bi - battery status
+
+uname -a - everything about kernel
+
+
+========================================================
+systemd
+========================================================
+systemd-analyze - analyze system manager
+systemd-analyze blame
+
+sudo systemctl status nginx.service
+
+sudo systemctl start nginx.service
+Usually we need to restart server, but if it is able to reload its config:
+sudo systemctl reload nginx.service
+sudo systemctl restart nginx.service
+If we are not sure whether the server is able to reload:
+sudo systemctl reload-or-restart nginx.service
+To start at boot time:
+sudo systemctl enable nginx.service
+NOTE: doesn't actually start server in the current session
+
+To check if it starts at boot time:
+sudo systemctl is-enable nginx.service
+
+sudo systemctl disable nginx.service
+
+To prevent from being started automatically:
+sudo systemctl mask nginx.service
+NOTE: can't be started or enabled
+
+To unmask:
+sudo systemctl unmask nginx.service
+
+To list loaded active units:
+systemctl list-inits
+To list all units:
+systemctl list-inits -all
+
+
+========================================================
+DNS
+========================================================
+nslookup
+dig -t ns site.com
+host site.com
+
+========================================================
+Bash scripting
+========================================================
+alias
+---
+alias - show all aliases
+alias c="clear"
+\grep - to call original command
+
+To make aliases persistent:
+~/.bash_profile
+~/.bashrc
+source ~/.bashrc
+
+unalias <command> - to remove an alias
+
+---
+Scripting
+---
+echo $0 - print the current shell
+cat /etc/shells - available shells
+cat /etc/passwd - the last column is the default user's shell
+
+Shell script begin with shebang:
+#!/usr/bin/bash
+#!/bin/bash
+If not added, the script will be executed by the default interpreter.
+which bash - to find the path
+
+#Bash uses comments starting with a hash '#' excluding shebang
+#Bash doesn't support multiline comments
+
+To run the script:
+1) with permission set:
+chmod u+x ./script.sh
+./script.sh - executes in the new shell
+
+2) doesn't need x premission
+bash ./script.sh - executes in the new shell
+source ./script.sh OR . ./script.sh - executes in the current shell
+
+No spaces with '=':
+var=value
+var="string with spaces"
+
+var=4 #integer
+var=string #string
+
+To acces variable value $ must be used:
+echo $var
+
+The name will be replaced with its value:
+echo "Variable = $var"
+The name will NOT be replaced with its value:
+echo "Variable = \$var"
+echo 'Variable = $var' #Single quotes
+
+distro="Ubuntu"
+my_distro="#distro #distro"
+echo $distro
+
+List all system variable:
+set
+
+unset distro #remove variable
+
+Constant variable (cannot be changed or unset)
+declare -r logdir="/var/log"
+
+See all environment variables:
+env
+printenv HOME
+
+User specific env variable:
+export MY_VAR=123
+System wide env variable should be declared in
+1) /etc/profile 
+2) /etc/bash.bashrc
+3) /etc/environment
+
+---
+Prompting
+---
+read name
+echo $name
+
+read -p "Enter an address:" ip
+echo $ip
+
+-s - disable input echoing
+read -s -p "Enter password" password
+
+---
+Special Variables and Positional Arguments
+---
+./script.sh filename1 dir1 10.0.0.1
+
+$0 is the name of the script itself (script.sh).
+$1 is the first positional argument (filename1)
+$2 is the second positional argument (dir1)
+$3 is the last argument of the script (10.0.0.1)
+$9 would be the ninth argument and ${10} the tenth
+
+$# is the number of the positional arguments
+"$*" is a string representation of all positional arguments: $1, $2, $3 ....
+$? is the most recent foreground command exit status
+
+---
+If, Elif and Else Statements
+---
+if [ some_condition_is_true ] && [ some_condition_is_true ]
+then
+    //execute this code
+elif [ some_other_condition_is_true ]
+then
+    //execute_this_code
+else
+    //execute_this_code
+fi
+
+man test - reference on Bash if conditions
+help test
+help [
+help [[
+
+Use quotes with variables "$2" which are strings in if-conditions
+[condition] - old and portable way
+[[condition]] - new and improved way (e.g. supprots regex, don't need quotes around string variables)
+
+---
+Command substitution:
+---
+1) with a backtick `
+now=`date`
+now="`date`" - for strings it is better to enclose in quotes
+2) with a dollar sign $
+users="$(who)"
+
+These substitutions can be used within other Bash commands:
+tar -czvf backup-$(date +%F_%H_%M).tar.gz /etc/
+
+---
+Comparing strings:
+---
+NOTE: don't forget whitespaces!
+
+if [ "$s1" = "$s2" ]
+    ...
+
+if [[ "$s1" == "$s2" ]]
+    ...
+
+Check if s1 contains Linux:
+if [[ "$s1" = *"Linux"* ]]
+    ...
+
+if [[ -z "$s1" ]] #check if string is zero length
+if [[ -n "$s1" ]] #check if string is not zero length
+
+output="$(ping -c 3 $1)"
+#quotes allow to print multiline correctly (with \n)
+echo "$output"
+
+---
+For loop
+---
+for intem in LIST
+do
+    COMMANDS
+done
+
+for s in S1 S2 S3 S4
+for n in {1..10} #step = 1
+for n in {1..100..5} #step = 5
+
+Enumerate files in the current dir:
+for item in ./*
+do
+    if [[ -f "$item" ]]
+    then
+        ...
+    fi
+done
+
+Enumerate all txt-files:
+for item in *.txt
+
+C-style for loop:
+for ((i=0;i<50;i++))
+do
+    ...
+done
+
+
+---
+While loop
+---
+while condition
+do
+    COMMANDS
+done
+
+Example:
+i=0
+
+while [[ $i -lt 10 ]]
+do
+    echo "i: $i"
+    ((i++)) #or also "let i=i+1"
+done
+
+a=4
+b=5
+c=$((a+b))
+let d=a+b
+
+Infinite loop:
+while true
+do
+    ...
+done
+
+: - is Bash built-in command which always returns true
+while :
+do
+    ...
+done
+
+---
+The Case statement
+---
+
+case EXPRESSION in
+    PATTERN_1)
+        STATEMENTS
+    ;;
+    PATTERN_2|PATTERN_3|"PATTERN_4 WITH SPACES")
+        STATEMENTS
+    ;;
+    *)  #wildcard statement works as "default" in C++
+        STATEMENTS
+    ;;
+esac
+
+---
+Functions
+---
+
+function print1() {
+    echo "Print1";
+}
+# also legit without "function" keyword
+print2() {
+    echo "Print2";
+}
+
+create_file() {
+    touch $1
+    touch $2
+    return 10 #value will be returned by the script
+}
+
+function lines_in_file() {
+    grep -c "$1" "$2"
+}
+
+print1
+print2
+create_file ~/Work/linux/file1 ~/Work/linux/file2 
+
+# to return value from the function
+n=$(lines_in_file "usb" "/var/log/dmesg")
+echo $n
+
+---
+Variable Scope
+---
+All variables are global by default
+
+var1="AA"
+var2="BB"
+
+function f1() {
+    var3="CC" #changes global variable
+    local var2="TT" #local variable hides the global one
+    echo "var1=$var1 var2=$var2"
+}
+
+---
+Menus - Select statement
+---
+select ITEM in LIST
+do
+    COMMADNS
+done
+
+#default prompt is "#?"
+#PS3 redefines it
+PS3="Choose a country:"
+select COUNTRY in Germany USA "United Kingdon" Quit
+do
+    echo "Country is $COUNTRY"
+    echo "User's reply is $REPLY"
+    case $REPLY in
+    1)
+        echo "Germany"
+        ;;
+    #...
+    5)
+        echo "Quitting..."
+        break
+        ;;
+    *)
+        echo "Invalid option"
+        ;;
+    esac
+done
+#$REPLY is automatic variable which stores user's reply number
+#loop is run util break is reached ot user enter ^C
+
+---
+Arrays
+---
+ages=(20 22 40 50)
+
+#print only 1st element
+echo $ages
+#print all elements
+echo ${ages[@]}
+echo ${ages[*]}
+#Prnt only indices
+echo ${!ages[*]}
+#Print a number of elements
+echo ${#ages[*]}
+#Print 2nd element
+echo ${ages[2]}
+Accesing non-existing element doesn't throw an error and return nothing
+echo ${ages[10000]}
+
+The last element of the array
+echo ${ages[-1]}
+The element before the last
+echo ${ages[-2]}
+
+Create a new array with two elements:
+numbers[0]=100
+numbers[1]=200
+numbers[0]=600
+
+#we also can create a new array by declaring it
+declare -a names
+names[0]="Dan"
+names[5]="Maria"
+#this array contains two elements with indices 0 and 5
+#gaps are fine in the arrays, such arrays are called sparse arrays
+
+#to remove an element
+unset names[5]
+
+years=(1966 1970 1985 2000 2014 2022)
+#append elements to the end
+years+=(2033 2050 2055)
+#access only elements starting from 2
+echo ${years[@]:2}
+#access 4 elements starting from 2
+echo ${years[@]:2:4}
+
+---
+Associative arrays:
+---
+declare -A userdata
+userdata[username]="youradmin"
+userdata[passworf]="qwerty"
+userdata[uid]=1000
+#print one element
+echo ${userdata[username]}
+#print all values
+echo ${userdata[*]}
+#print all keys
+echo ${!userdata[*]}
+
+#add new elements
+userdata[login]="$(data --utc +%s)"
+usedata+=([shell]="Bash" [admin]="False")
+
+#read-only array
+declare -r -A SUPERSTARS=([Germany]="Boney M" [UK]="Beatles")
+#this command will return an array
+SUPERSTARS[USA]="Metallica"
+
+#remove items
+unset userdata[password]
+
+---
+readarray
+---
+#create an array and ask for user's input
+readarray month
+
+readarray month< <(cat months.txt)
+#first '<' redirection to input
+#<(cat months.txt) - a process substitution makes output of a command as a file
+
+#print elements with special characters (e.g. $'April\n')
+echo ${months[@]@Q}
+#-t removes trailing new lines (e.g. 'April')
+readarray -t month< <(cat months.txt)
+
+#an array of users of the system
+readarray users< <(cat -d: -f1 /etc/passwd)
+#an array of items in /etc
+readarray files< <(ls /etc)
+
+---
+iterate over arrays
+---
+readarray files< <(ls /etc/*)
+for f in "${files[@]}"
+do
+    #if file and we have read permission
+    if [[ -f $f && -r $f ]]
+    then
+        cat $f
+    fi
+done
+
+
+========================================================
+Fork bomb
+========================================================
+In bomb.sh:
+# each time scrip forks two more instances
+$0 && $0 &
+
+man ulimit
+Edit this file to decrease a procees number for each user:
+cat /etc/security/limits.conf
+
+
+========================================================
+Gathering and Sniffing traffic
+========================================================
+nmap
+arp-scan
+netdiscover
+
+
+
+
+
+
+========================================================
+bash command line
+========================================================
+Reference:
+https://kapeli.com/cheat_sheets/Bash_Shortcuts.docset/Contents/Resources/Documents/index
+https://stackoverflow.com/questions/24232301/set-custom-basic-shortcut-in-a-bash-shell
+
+Ctrl + b - step back
+Ctrl + f - step forward
+
+Ctrl + a - jump to the beginning of the line
+Ctrl + e - jump to the beginning of the line
+
+Ctrl + d - delete symbol under the cursor
+Ctrl + w - delete the previous word
+Ctrl + u - delete symbols up to the beginning of the line
+
+Ctrl+h - delete character before under cursor
+Ctrl+k - delete from cursor to the end of the command line
+Ctrl+l - clear the screen
+Ctrl+j - Enter
+
+
+========================================================
+tmux
+========================================================
+1. Set CapsLock to Ctrl
+
+Cheatsheet:
+https://www.herusetiawan.id/posts/an-introduction-to-tmux/
+https://gist.github.com/therusetiawan/7dcc2fbece9353de7dd14bb461bc5df3
+
+prefix - Ctrl-b
+
+Start using tmux
+$ tmux new
+
+Start using tmux with named session
+$ tmux new -s [session name]
+
+List of tmux session
+$ tmux ls
+
+Attach to named session
+tmux a -t [name of session]
+
+Kill tmux session
+$ tmux kill-session -t [session name]
+
+prefix c - Create new window
+prefix % - create new horizontal pane
+prefix " - create new vertical pane
+
+prefix d - exit
+prefix x - kill pane
+
+prefix z - zoom in/out a pane
+
+------------------------------
+Navigation
+------------------------------
+prefix + n - next window
+prefix + p - previous window
+prefix + l - last window
+
+prefix + L - last session
+
+prefix + s - choose tree (of sessions and windows)
+prefix + q - show pane number (type a number to jump immediately)
+------------------------------
+Scroll mode
+------------------------------
+C+b [ - Scroll mode
+q - quit Scroll mode
+
+------------------------------
+Rename
+------------------------------
+prefix + $ - rename session
+prefix + , - rename window
+prefix + . - rename window number
+
+
+------------------------------
+Clipboard integration
+------------------------------
+https://www.freecodecamp.org/news/tmux-in-practice-integration-with-system-clipboard-bcd72c62ff7b/
+
+sudo apt install xclip
+
+Between local and remote via X forwarding:
+https://github.com/zyedidia/micro/issues/1569
+
+------------------------------
+RPi ~/.tmux.conf
+------------------------------
+run-shell /home/`whoami`/.tmux/tmux-resurrect/resurrect.tmux
+#source-file "${HOME}/.tmux-themepack/powerline/block/red.tmuxtheme"
+set-option -g default-shell /bin/bash
+set-option -g status-position top
+set -g base-index 1
+#unbind-key C-b
+#set -g prefix 'C-]'
+#bind-key 'C-]' send-prefix
+
+set -g default-terminal "screen-256color"
+set-window-option -g window-status-current-bg red
+
+set-window-option -g mode-keys vi
+bind-key -T copy-mode-vi v send-keys -X begin-selection
+bind-key -T copy-mode-vi y send-keys -X copy-pipe "xsel -i -p -b" \;\
+                        send-keys -X clear-selection
+
+set -sg escape-time 0
+set -g set-clipboard off
+set -g history-limit 50000
+#set -g mouse-utf8 on
+set -g mouse on
+
+# Panes navigation
+bind j select-pane -D
+bind k select-pane -U
+bind h select-pane -L
+bind l select-pane -R
+
+# Panes resize
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r H resize-pane -L 5
+bind -r L resize-pane -R 5
+
+unbind z
+unbind m
+bind m resize-pane -Z
+
+
+# custom
+bind-key Tab last-window
+bind-key P choose-buffer
+
+unbind -T copy-mode-vi MouseDragEnd1Pane
+bind -T copy-mode-vi MouseDown1Pane select-pane \;\
+  send-keys -X clear-selection
+  #send-keys -X copy-pipe "xsel -i -p -b" \;\
+
+# List of plugins
+#set -g @plugin 'tmux-plugins/tpm'
+#set -g @plugin 'tmux-plugins/tmux-sensible'
+#set -g @plugin 'tmux-plugins/tmux-resurrect'
+
+# Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+#run '~/.tmux/plugins/tpm/tpm'
+------------------------------------------------------------------------------------------
+
+
+========================================================
+GNU Screen
+========================================================
+screen -x
+
+Ctrl + a + c - create a new session
+Ctrl + a + <0-9> - switch between windows
+Ctrl + a + d - quit Screen
+Ctrl + a Ctrl + a - toggle the previous window
+Ctrl + a \ - close all windows and quit the session
+Ctrl + a w - list of all opened windows
+
+------------------------------
+Ctrl + [ [ - enter Copy mode
+    - press spacebar to mark selection start
+    - move the cursor to select
+    - press spacebar again to mark selection end
+Ctrl + ] - paste the copied text
+
+------------------------------
+Ctrl + : - enter Command mode
+then type
+    quit - to
+
+------------------------------
+Ctrl + a | - split horizontally (then create a new session)
+Ctrl + a Tab - to move between split regions
+Ctrl + a Q - close inactive region (not currently selected)
+Ctrl + a X - close the current region
+
+------------------------------
+$ screen -XS <session-id> quit
+where -X - execute command,
+      -S session PID to execute on
+
+To show windows in the bottom bar add command to .screenrc (or execute them in  Command mode):
+.screenrc:
+
+hardstatus on
+hardstatus alwayslastline
+hardstatus string "%w"
+
+========================================================
+SSH key generation
+========================================================
+ssh-keygen -t rsa -b 2048 -C 'comment'
+ssh-copy-id -i key.pub user@ip_address - to automatically add public key to the remote's authorized_keys
+
+========================================================
+SSH port tunneling
+========================================================
+https://stackoverflow.com/questions/36353955/apt-get-install-via-tunnel-proxy-but-ssh-only-from-client-side
+
+ssh -R 9000:raspbian.raspberrypi.org:80 rpi
+
+ssh -R 9001:archive.raspberrypi.org:80 rpi
+
+/etc/apt/apt.config
+#Acquire::http::Proxy "http://localhost:9001";
+#Acquire::https::Proxy "https://localhost:9001";
+
+/etc/apt/source.list
+#deb http://localhost:9000/raspbian/ buster main contrib non-free rpi
+
+/etc/apt/source.list.d/raspi.list
+#deb https://localhost:9001/debian/ buster main
+
+========================================================
+Python update alternatives
+========================================================
+1. list for available Python executables:
+$ ls /usr/bin/python*
+
+2. check if it has any alternatives so far
+$ sudo update-alternatives --list python
+
+3. install new alternatives
+$ sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+$ sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 2
+
+4. select one you need
+$ sudo update-alternatives --config python
+
+5. check that Python has switched
+$ python -V
+
+========================================================
+Vim
+========================================================
+C-^ - switch to the previous buffer
+
+grep ims -R *
+
+cfdo %s///g | update
+
+------------------------------
+Rg
+------------------------------
+Ctrl-v - open file in vertical split
+Ctrl-x - open file in horizontal split
+Ctrl-t - open file in a new tab
+Shift-Tab - mark file for further opening
+
+:Rg atCmdSipNtfCbk -g '*.cpp' - ignore Glob pattern
+:Rg atCmdSipNtfCbk -g !'tags' - ignore Glob pattern
+
+:Rg atCmdSipNtfCbk -tcpp - only C++ files
+:Rg atCmdSipNtfCbk -Tcpp - exclude C++ files
+
+========================================================
+grep
+========================================================
+grep -iwrn voip ./services/imsVoip/src/ --include=*.h*
+i - ignorecase
+w- whole word
+r - recursive w/o dereferencing symlinks
+n - show line numbers
+l - show only file names
+c - count matches
+
+========================================================
+minicom
+========================================================
+Ctrl + a z - Command help screen
+Ctrl + a x - Exit
+
+------------------------------
+Set up macros
+------------------------------
+Reference:
+https://www.cibomahto.com/2008/01/howto-macros-in-minicom/comment-page-1/
+
+1. Ctrl + a o - Configure minicom
+2. select "Screen and keyboard"
+3. type "m" to edit macros
+
+~/.macros:
+pu pmac1            <command1>
+pu pmac2            <command2>
+pu pmac3            <command3>
+
+========================================================
+Clipboard management
+========================================================
+cat file | xclip -selection clipboard
