@@ -6,6 +6,7 @@ https://github.com/changemewtf/no_plugins
 1. in Linux settings remap _Caps Lock_ to be _Ctrl_ for better usability
 2. run ***configure.sh***
 3. in Vim ***:PluginInstall*** to pull and install the plug-ins
+4. install universal-ctags from https://github.com/universal-ctags/ctags
 
 
 

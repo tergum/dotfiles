@@ -27,6 +27,16 @@ Plugin 'octol/vim-cpp-enhanced-highlight'
 " https://github.com/rakr/vim-one
 Plugin 'rakr/vim-one'
 
+" fzf integration
+" https://github.com/junegunn/fzf
+Plugin 'junegunn/fzf'
+Plugin 'junegunn/fzf.vim'
+
+" remove selection when cursor moves
+Plugin 'haya14busa/is.vim'
+" select some text in Visual Mode and then use * and # for the search
+" Plugin 'nelstrom/vim-visual-star-search'
+
 " The following are examples of different formats supported.
 " Keep Plugin commands between vundle#begin/end.
 " plugin on GitHub repo
@@ -90,6 +100,10 @@ let g:netrw_liststyle=3     " tree view
 let g:netrw_list_hide=netrw_gitignore#Hide()
 let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
 
+" Per default, netrw leaves unmodified buffers open. This autocommand
+" deletes netrw's buffer once it's hidden (using ':q', for example)
+autocmd FileType netrw setl bufhidden=delete
+
 " Files search with :find
 " NOTE: use * for fuzzy search
 set path+=.,**
@@ -122,3 +136,45 @@ let g:airline_theme='one'
 colorscheme one 
 set background=dark
 
+" .............................................................................
+" fzf key-bindings
+" .............................................................................
+let $FZF_DEFAULT_OPTS = '--bind ctrl-a:select-all'
+
+" Customize fzf colors to match your color scheme.
+let g:fzf_colors =
+  \ { 'fg':      ['fg', 'Normal'],
+  \ 'bg':      ['bg', 'Normal'],
+  \ 'hl':      ['fg', 'Comment'],
+  \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+  \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
+  \ 'hl+':     ['fg', 'Statement'],
+  \ 'info':    ['fg', 'PreProc'],
+  \ 'prompt':  ['fg', 'Conditional'],
+  \ 'pointer': ['fg', 'Exception'],
+  \ 'marker':  ['fg', 'Keyword'],
+  \ 'spinner': ['fg', 'Label'],
+  \ 'header':  ['fg', 'Comment'] }
+
+let g:fzf_action = {
+  \ 'ctrl-t': 'tab split',
+  \ 'ctrl-b': 'split',
+  \ 'ctrl-v': 'vsplit'}
+
+" list all files (also might be remapped to <C-p>)
+nnoremap <silent> <leader>p :Files<CR>
+" list loaded buffers
+nnoremap <silent> <leader>b :Buffers<CR>
+" show lines in loaded buffers
+nnoremap <silent> <leader>l :Lines<CR>
+" Allow passing optional flags into the Rg command.
+"   Example: :Rg myterm -g '*.md'
+command! -bang -nargs=* Rg
+  \ call fzf#vim#grep(
+  \ "rg --column --line-number --no-heading --color=always --smart-case " .
+  \ <q-args>, 1, fzf#vim#with_preview(), <bang>0)
+
+" .............................................................................
+" universal-ctags
+" .............................................................................
+nnoremap <silent> <leader>t :!ctags -R .<CR><CR>
